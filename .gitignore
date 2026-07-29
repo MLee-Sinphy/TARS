@@ -1,0 +1,14 @@
+# Logs
+*.log
+
+# Ambiente
+.env
+
+# Cache
+__pycache__/
+
+# Sessões locais
+sessions/
+
+# Arquivos temporários
+*.tmp

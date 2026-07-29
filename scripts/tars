@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+TARS_HOME="$HOME/AI/TARS"
+
+MODEL=$(cat "$TARS_HOME/models/current")
+
+echo "Usando modelo: $MODEL"
+
+hermes chat -m "$MODEL"
