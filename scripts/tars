@@ -3,6 +3,8 @@
 TARS_HOME="$HOME/AI/TARS"
 
 source "$TARS_HOME/lib/model_manager.sh"
+source "$TARS_HOME/lib/context_manager.sh"
+source "$TARS_HOME/lib/agents_builder.sh"
 
 
 if [[ "$1" == "models" ]]; then
@@ -16,6 +18,7 @@ if [[ "$1" == "update-default" ]]; then
     exit 0
 fi
 
+
 if [[ -n "$1" ]]; then
     MODEL=$(resolve_model "$1")
 else
@@ -23,6 +26,20 @@ else
 fi
 
 
-echo "Usando modelo: $MODEL"
+build_context > /dev/null
 
-hermes chat -m "$MODEL"
+build_agents > /dev/null
+
+
+echo "Modelo:"
+echo "$MODEL"
+
+echo ""
+
+echo "Contexto carregado pelo TARS:"
+cat "$TARS_CACHE/current_context.md"
+
+echo ""
+
+hermes chat \
+    -m "$MODEL"
