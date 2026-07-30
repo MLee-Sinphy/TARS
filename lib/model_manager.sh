@@ -68,3 +68,26 @@ list_models() {
     echo "Modelo atual:"
     echo "$(get_current_model)"
 }
+
+set_default_model() {
+    local MODEL="$1"
+
+    echo "$MODEL" > "$CURRENT_MODEL_FILE"
+}
+
+update_default_model() {
+    local INPUT="$1"
+    local MODEL
+
+    MODEL=$(resolve_model "$INPUT")
+
+    if [[ -z "$MODEL" ]]; then
+        echo "Modelo não encontrado: $INPUT"
+        return 1
+    fi
+
+    set_default_model "$MODEL"
+
+    echo "Modelo padrão atualizado:"
+    echo "$MODEL"
+}

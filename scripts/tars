@@ -11,6 +11,11 @@ if [[ "$1" == "models" ]]; then
 fi
 
 
+if [[ "$1" == "update-default" ]]; then
+    update_default_model "$2"
+    exit 0
+fi
+
 if [[ -n "$1" ]]; then
     MODEL=$(resolve_model "$1")
 else
