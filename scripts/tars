@@ -2,7 +2,13 @@
 
 TARS_HOME="$HOME/AI/TARS"
 
-MODEL=$(cat "$TARS_HOME/models/current")
+source "$TARS_HOME/lib/model_manager.sh"
+
+if [[ -n "$1" ]]; then
+    MODEL=$(get_model_by_index "$1")
+else
+    MODEL=$(get_current_model)
+fi
 
 echo "Usando modelo: $MODEL"
 

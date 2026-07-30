@@ -1,0 +1,6 @@
+# id | alias | provider/model
+
+1|claude|anthropic/claude-3.5-sonnet
+2|gpt-4o|openai/gpt-4o
+3|gemini|google/gemini-1.5-pro
+4|o4-mini|openai/o4-mini
