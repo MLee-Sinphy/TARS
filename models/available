@@ -1,6 +1,21 @@
-# id | alias | provider/model
+# id | alias | provider/model | description
 
-1|claude|anthropic/claude-3.5-sonnet
-2|gpt-4o|openai/gpt-4o
-3|gemini|google/gemini-1.5-pro
-4|o4-mini|openai/o4-mini
+1|claude-opus|anthropic/claude-opus-4|Máxima qualidade de raciocínio, escrita e análise complexa
+
+2|gpt5|openai/gpt-5|Modelo premium geral, forte em raciocínio, código e agentes
+
+3|gemini-pro|google/gemini-2.5-pro|Grande contexto, multimodalidade e análise de documentos
+
+4|claude-sonnet|anthropic/claude-sonnet-4|Excelente equilíbrio entre qualidade, velocidade e custo
+
+5|gpt5-mini|openai/gpt-5-mini|Alto custo-benefício para uso diário e agentes
+
+6|o4-mini|openai/o4-mini|Raciocínio avançado com baixo custo
+
+7|gemini-flash|google/gemini-2.5-flash|Muito rápido, barato e eficiente para tarefas frequentes
+
+8|deepseek-r1|deepseek/deepseek-r1|Raciocínio open-source competitivo para matemática e código
+
+9|llama|meta-llama/llama-3.3-70b|Modelo open-source geral para servidores próprios
+
+10|qwen|qwen/qwen3|Modelo open-source forte em código e múltiplos idiomas

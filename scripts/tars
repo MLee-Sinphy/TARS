@@ -4,11 +4,19 @@ TARS_HOME="$HOME/AI/TARS"
 
 source "$TARS_HOME/lib/model_manager.sh"
 
+
+if [[ "$1" == "models" ]]; then
+    list_models
+    exit 0
+fi
+
+
 if [[ -n "$1" ]]; then
-    MODEL=$(get_model_by_index "$1")
+    MODEL=$(resolve_model "$1")
 else
     MODEL=$(get_current_model)
 fi
+
 
 echo "Usando modelo: $MODEL"
 
