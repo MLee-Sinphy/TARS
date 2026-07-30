@@ -12,18 +12,21 @@ O objetivo do projeto é criar uma camada própria de controle, configuração e
 - modelos de linguagem;
 - ferramentas;
 - memória;
+- contexto;
 - automações;
 - configurações do ambiente.
 
-O Hermes funciona como o motor de execução da IA. O TARS é a aplicação que organiza, controla e evolui esse motor.
+O Hermes funciona como o motor de execução da IA.
 
-A ideia é transformar o TARS em um agente modular, versionado e portátil, que possa ser instalado em diferentes máquinas e evoluir como um software real.
+O TARS é a aplicação responsável por organizar, controlar e evoluir esse motor.
+
+A ideia é transformar o TARS em um agente modular, versionado e portátil, desenvolvido seguindo princípios de engenharia de software.
 
 ---
 
 # Arquitetura atual
 
-A arquitetura inicial do TARS segue o modelo:
+A arquitetura atual:
 
 ```
 Usuário
@@ -37,14 +40,17 @@ Comando: tars
    v
 ~/AI/TARS/scripts/tars
    |
-   v
-Configurações do TARS
+   |
+   +----------------+
+   |                |
+   v                v
+Model Manager   Context Engine
    |
    v
 Hermes Agent
    |
    v
-Modelo de linguagem escolhido
+Modelo de linguagem
 ```
 
 Cada camada possui uma responsabilidade específica.
@@ -61,23 +67,23 @@ Exemplo:
 alias tars='hermes chat -m modelo ...'
 ```
 
-Essa abordagem funciona, mas possui limitações:
+Essa abordagem funciona, porém possui limitações:
 
-- a configuração fica misturada com o shell;
-- não existe uma estrutura de projeto;
-- fica difícil versionar;
-- dificulta adicionar novas funcionalidades;
-- depende de uma configuração manual da máquina.
+- configuração misturada ao shell;
+- difícil versionamento;
+- pouca modularidade;
+- difícil adicionar funcionalidades;
+- dependência de configuração manual.
 
 Por isso o TARS foi transformado em um programa próprio.
 
-Agora o comando:
+Agora:
 
 ```bash
 tars
 ```
 
-executa um software controlado pelo projeto.
+executa uma aplicação controlada pelo projeto.
 
 ---
 
@@ -89,7 +95,7 @@ Quando um comando é digitado:
 tars
 ```
 
-o shell procura um executável nos diretórios definidos pela variável de ambiente:
+o Bash procura um executável nos diretórios definidos pela variável:
 
 ```bash
 PATH
@@ -104,15 +110,15 @@ Exemplo:
 ~/.local/bin
 ```
 
-Como o TARS possui o arquivo:
+Como existe:
 
 ```
 ~/.local/bin/tars
 ```
 
-o Bash consegue encontrá-lo automaticamente.
+o sistema encontra automaticamente o programa.
 
-O processo é:
+Fluxo:
 
 ```
 Usuário digita:
@@ -136,33 +142,7 @@ Executa o programa
 
 ---
 
-# Estrutura atual do projeto
-
-```
-TARS/
-
-├── config/
-│
-├── docs/
-│
-├── models/
-│   └── current
-│
-├── prompts/
-│
-├── scripts/
-│   └── tars
-│
-├── README.md
-│
-├── LICENSE
-│
-└── .gitignore
-```
-
----
-
-# O launcher
+# Launcher global
 
 O arquivo:
 
@@ -170,11 +150,11 @@ O arquivo:
 ~/.local/bin/tars
 ```
 
-é o ponto de entrada global do programa.
+é apenas o ponto de entrada global.
 
-Ele não contém a lógica principal.
+Ele não possui a lógica do programa.
 
-Seu objetivo é apenas encaminhar a execução para o projeto:
+Conteúdo:
 
 ```bash
 #!/usr/bin/env bash
@@ -182,16 +162,24 @@ Seu objetivo é apenas encaminhar a execução para o projeto:
 exec ~/AI/TARS/scripts/tars "$@"
 ```
 
-Esse padrão mantém o sistema organizado:
+A função dele é encaminhar a execução para o projeto real.
+
+Arquitetura:
 
 ```
 PATH
+
  |
+
  v
+
 Launcher
+
  |
+
  v
-Projeto real
+
+Projeto TARS
 ```
 
 ---
@@ -228,48 +216,45 @@ Shell
        └── Hermes
 ```
 
-Isso evita processos intermediários desnecessários.
+Benefícios:
 
-É uma prática comum em:
-
-- scripts de inicialização;
-- containers Docker;
-- serviços Linux;
-- sistemas Unix.
+- evita processos intermediários;
+- melhora gerenciamento de sinais;
+- segue padrões Unix;
+- é comum em scripts de serviços e containers.
 
 ---
 
 # O significado de "$@"
 
-No Bash, argumentos passados para um programa são armazenados em variáveis:
+Argumentos recebidos pelo Bash:
 
 ```bash
 $1
 $2
 $3
-...
 ```
 
 Exemplo:
 
 ```bash
-tars arquivo.txt estudo
+tars claude-opus teste
 ```
 
 gera:
 
 ```
-$1 = arquivo.txt
-$2 = estudo
+$1 = claude-opus
+$2 = teste
 ```
 
-A variável especial:
+A variável:
 
 ```bash
 $@
 ```
 
-representa todos os argumentos recebidos.
+representa todos os argumentos.
 
 Então:
 
@@ -279,203 +264,353 @@ exec ~/AI/TARS/scripts/tars "$@"
 
 significa:
 
-> Execute o TARS real e envie todos os argumentos que o usuário passou.
+> Execute o TARS real passando todos os argumentos recebidos.
 
-Exemplo futuro:
+Isso permite comandos futuros como:
 
 ```bash
-tars model 4
+tars models
+tars update-default gpt5
+tars read arquivo.md
 ```
-
-poderá chegar ao script principal como:
-
-```
-$1 = model
-$2 = 4
-```
-
-permitindo criar comandos internos do próprio TARS.
 
 ---
 
-# Configuração de modelos
+# Estrutura atual do projeto
 
-Os modelos utilizados pelo TARS são separados do código.
+```
+TARS/
 
-O arquivo:
+├── lib/
+│   └── model_manager.sh
+│
+├── models/
+│   ├── available
+│   └── current
+│
+├── scripts/
+│   └── tars
+│
+├── prompts/
+│
+├── docs/
+│
+├── README.md
+│
+├── LICENSE
+│
+└── .gitignore
+```
+
+---
+
+# Model Manager
+
+O sistema de modelos foi separado da lógica principal.
+
+Responsabilidade:
+
+```
+model_manager.sh
+
+        |
+
+        +── descobrir modelo atual
+
+        +── buscar por índice
+
+        +── buscar por alias
+
+        +── listar modelos
+
+        +── alterar modelo padrão
+```
+
+---
+
+# Banco de modelos
+
+Arquivo:
+
+```
+models/available
+```
+
+Formato:
+
+```
+id|alias|modelo|descrição
+```
+
+Exemplo:
+
+```
+1|claude-opus|anthropic/claude-opus-4|Máxima qualidade
+2|gpt5|openai/gpt-5|Modelo premium geral
+3|gemini-pro|google/gemini-2.5-pro|Grande contexto
+```
+
+O arquivo funciona como fonte única da verdade.
+
+---
+
+# Modelo atual
+
+Arquivo:
 
 ```
 models/current
 ```
 
-define o modelo atualmente ativo.
-
 Exemplo:
 
 ```
 openai/o4-mini
 ```
 
-O script principal lê esse arquivo:
+Esse arquivo define o modelo padrão.
+
+---
+
+# Comandos atuais
+
+## Abrir TARS com modelo padrão
 
 ```bash
-MODEL=$(cat "$TARS_HOME/models/current")
+tars
 ```
 
-Depois inicia o Hermes:
+---
+
+## Usar modelo específico temporariamente
+
+Por alias:
 
 ```bash
-hermes chat -m "$MODEL"
+tars claude-opus
 ```
 
-Essa separação permite trocar modelos sem alterar código.
+Por índice:
 
-Exemplo:
-
-Antes:
-
-```
-openai/o4-mini
+```bash
+tars 1
 ```
 
-Depois:
+---
+
+## Listar modelos disponíveis
+
+```bash
+tars models
+```
+
+Exibe:
+
+- índice;
+- alias;
+- modelo;
+- descrição;
+- modelo atual.
+
+---
+
+## Alterar modelo padrão
+
+```bash
+tars update-default claude-opus
+```
+
+Atualiza:
 
 ```
-openai/gpt-4o
+models/current
 ```
 
-O funcionamento do TARS permanece igual.
+A partir desse momento:
+
+```bash
+tars
+```
+
+usará o novo modelo.
 
 ---
 
 # Filosofia de desenvolvimento
 
-O TARS será desenvolvido seguindo princípios de engenharia de software.
+O TARS segue princípios de engenharia de software.
 
 ## Separação de responsabilidades
 
-Cada componente possui uma função clara.
-
 ```
 Launcher
+
     |
     apenas inicia
 
-Scripts
-    |
-    lógica do programa
 
-Config
+Scripts
+
+    |
+    lógica
+
+
+Configurações
+
     |
     parâmetros
 
-Prompts
-    |
-    identidade e comportamento
 
 Models
+
     |
-    escolha do modelo
+    modelos disponíveis
+
+
+Context
+
+    |
+    conhecimento e comportamento
 ```
 
 ---
 
-# Versionamento
+# Camadas de contexto (próxima etapa)
 
-Todo o projeto será mantido utilizando Git.
+A próxima grande evolução será o sistema de contexto.
 
-Objetivos:
+Objetivo:
 
-- registrar evolução;
-- recuperar versões antigas;
-- documentar mudanças;
-- facilitar migração para novas máquinas.
-
----
-
-# Modularidade
-
-O TARS deve crescer através de módulos independentes.
-
-Possíveis módulos futuros:
-
-- memória;
-- gerenciamento de projetos;
-- integração com GitHub;
-- automação;
-- pesquisa;
-- calendário;
-- ferramentas próprias.
-
----
-
-# Próximos objetivos
-
-## Sistema de prompts
-
-Separar a identidade do agente em arquivos independentes:
-
-```
-prompts/
-
-├── personality.md
-├── physics_math.md
-├── programming.md
-├── research.md
-└── tools.md
-```
-
-Permitindo diferentes modos de operação.
-
----
-
-## Sistema de seleção de modelos
-
-Criar comandos como:
-
-```bash
-tars model
-```
-
-ou:
-
-```bash
-tars model 4
-```
+O TARS deve entender automaticamente onde está sendo executado.
 
 Exemplo:
 
 ```
-1 - o4-mini
-2 - GPT-4o
-3 - Claude
-4 - Gemini
-5 - DeepSeek
+my-study-vault/
+
+├── .tars
+
+└── physics/
+
+    ├── .tars
+
+    └── quantum_mechanics/
+
+        └── .tars
 ```
 
-O usuário poderá escolher o modelo diretamente pelo terminal.
+Ao executar:
+
+```bash
+tars
+```
+
+dentro de:
+
+```
+quantum_mechanics
+```
+
+o TARS deverá montar:
+
+```
+identidade global
+
++
+
+física e matemática
+
++
+
+mecânica quântica
+```
+
+Esse sistema será chamado de:
+
+```
+Context Engine
+```
 
 ---
 
-## Sistema de configuração
+# Próximos módulos
 
-Criar comandos:
+## Context Engine
 
-```bash
-tars config
+Responsável por:
+
+- buscar arquivos `.tars`;
+- montar contexto hierárquico;
+- carregar informações específicas;
+- criar prompt final.
+
+---
+
+## Prompt Builder
+
+Responsável por combinar:
+
+```
+Identidade
+
++
+
+Personalidade
+
++
+
+Contexto
+
++
+
+Instruções específicas
+
++
+
+Arquivo fornecido pelo usuário
 ```
 
-Permitindo:
+---
 
-- alterar nome do agente;
-- modificar personalidade;
-- escolher modelo;
-- configurar memória;
-- alterar comportamento.
+## Memória
+
+Possíveis camadas:
+
+```
+Memória curta
+(sessão atual)
+
+Memória média
+(projeto)
+
+Memória longa
+(base de conhecimento)
+```
+
+Possíveis tecnologias:
+
+- SQLite;
+- embeddings;
+- RAG.
+
+---
+
+## Interface própria
+
+Objetivo futuro:
+
+Substituir gradualmente a interface do Hermes por uma experiência própria:
+
+- nome TARS;
+- cores próprias;
+- layout próprio;
+- comandos próprios.
 
 ---
 
 ## Instalação automática
+
+Futuro:
 
 Criar:
 
@@ -488,7 +623,7 @@ Responsável por:
 - instalar dependências;
 - criar diretórios;
 - configurar permissões;
-- adicionar launcher;
+- configurar PATH;
 - preparar ambiente.
 
 Objetivo:
@@ -501,49 +636,66 @@ cd TARS
 ./install.sh
 ```
 
-e o agente estará funcionando.
-
----
-
-# Visão futura
-
-A visão final é transformar o TARS em um framework pessoal de agentes:
-
-```
-              TARS
-
-                |
- ┌──────────────┼──────────────┐
- |              |              |
-Identidade   Memória      Modelos
-
- |              |              |
-
-Personalidade Ferramentas   Plugins
-
-                |
-
-             Hermes
-```
-
-O Hermes fornece a capacidade de raciocínio.
-
-O TARS fornece identidade, organização, contexto e evolução.
+e o agente estará pronto.
 
 ---
 
 # Estado atual
 
-Versão inicial:
+## Concluído
 
 - [x] Criado projeto TARS
 - [x] Criado launcher global
 - [x] Configurado PATH
 - [x] Criado script principal
-- [x] Separado modelo em configuração externa
-- [x] Integração inicial com Hermes
-- [ ] Sistema de prompts
+- [x] Separado código e configuração
+- [x] Integração com Hermes
+- [x] Sistema de modelos
+- [x] Seleção por índice
+- [x] Seleção por alias
+- [x] Lista de modelos
+- [x] Alteração de modelo padrão
+
+## Próximos passos
+
+- [ ] Context Engine
+- [ ] Sistema `.tars` hierárquico
+- [ ] Prompt Builder
 - [ ] Sistema de memória
 - [ ] Sistema de plugins
 - [ ] Instalador automático
-- [ ] Interface de configuração
+- [ ] Interface própria
+
+---
+
+# Visão final
+
+O objetivo final é transformar o TARS em um framework pessoal de agentes:
+
+```
+                 TARS
+
+                   |
+
+     ┌─────────────┼─────────────┐
+
+     |             |             |
+
+ Identidade     Contexto      Modelos
+
+     |             |             |
+
+Personalidade   Memória     Ferramentas
+
+                   |
+
+                Hermes
+
+                   |
+
+                LLM
+```
+
+O Hermes fornece capacidade de raciocínio.
+
+O TARS fornece identidade, contexto, organização e evolução.
