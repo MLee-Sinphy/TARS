@@ -1,18 +1,7 @@
 #!/usr/bin/env bash
 
-TARS_HOME="$HOME/AI/TARS"
-
-source "$TARS_HOME/config/paths.sh"
-source "$TARS_HOME/lib/context_manager.sh"
-
 if [[ "$1" == "model" ]]; then
     exec hermes model
 fi
-
-CONTEXT_FILE=$(build_context)
-
-echo "Contexto carregado pelo TARS:"
-head -40 "$CONTEXT_FILE"
-echo ""
 
 exec hermes chat
